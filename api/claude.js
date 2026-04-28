@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         'x-api-key': apiKey
       },
       body: JSON.stringify({
-        model: req.body.model || 'claude-sonnet-4-20250514',
+        model: req.body.model || 'claude-sonnet-4-5',
         max_tokens: req.body.max_tokens || 4000,
         messages: req.body.messages
       })

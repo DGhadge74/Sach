@@ -593,6 +593,47 @@
     font-style: italic; color: var(--accent); margin-bottom: 24px;
     line-height: 1.1;
   }
+  /* ── SOURCE CITATIONS ── */
+  .src-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-family: var(--mono); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px; vertical-align: middle;
+    margin-left: 6px; white-space: nowrap; cursor: default;
+  }
+  .src-high { background: rgba(61,232,176,0.12); color: #3de8b0; border: 0.5px solid rgba(61,232,176,0.25); }
+  .src-medium { background: rgba(255,184,74,0.12); color: #ffb84a; border: 0.5px solid rgba(255,184,74,0.25); }
+  .src-low { background: rgba(155,154,147,0.12); color: #9b9a93; border: 0.5px solid rgba(155,154,147,0.2); }
+  .src-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .src-high .src-dot { background: #3de8b0; }
+  .src-medium .src-dot { background: #ffb84a; }
+  .src-low .src-dot { background: #9b9a93; }
+
+  /* Sources panel */
+  .sources-section {
+    border-top: 0.5px solid var(--border);
+    padding: 32px 36px;
+    background: rgba(255,255,255,0.01);
+  }
+  .sources-eyebrow { font-size: 11px; font-family: var(--mono); color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
+  .sources-title { font-size: 20px; font-weight: 400; font-family: var(--serif); color: var(--text); margin-bottom: 6px; }
+  .sources-sub { font-size: 12px; font-family: var(--mono); color: var(--muted2); margin-bottom: 24px; line-height: 1.6; }
+  .sources-legend { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+  .sources-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-family: var(--mono); color: var(--muted2); }
+  .sources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .source-card {
+    background: var(--glass); border: 0.5px solid var(--border2);
+    border-radius: 10px; padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .source-card:hover { border-color: var(--border3); }
+  .source-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .source-card-name { font-size: 13px; font-weight: 600; font-family: var(--font); color: var(--text); flex: 1; }
+  .source-card-data { font-size: 12px; font-family: var(--mono); color: var(--muted2); line-height: 1.5; }
+  .source-card-url { font-size: 11px; font-family: var(--mono); color: var(--accent); margin-top: 6px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Inline source on trend/signal items */
+  .sc:nth-child(1) .src-badge { filter: brightness(0.85); }
+
   /* FOOTER */
   .op-footer {
     padding: 18px 36px; display: flex; align-items: center; justify-content: space-between;
@@ -682,7 +723,23 @@ async function run() {
   setStatus('Searching and synthesizing market signals...', 'spin');
   document.getElementById('out').innerHTML = skel();
 
-  var prompt = `You are a senior market intelligence analyst. Research the market for: "${query}"
+  var prompt = `You are a senior market intelligence analyst with access to the latest research reports. Research the market for: "${query}"
+
+You have access to this VERIFIED REPORT DATA — use it when relevant to the query:
+
+IIPP 2025 STATE OF DIGITAL PUBLIC INFRASTRUCTURE REPORT (UCL Institute for Innovation and Public Purpose, October 2025, ISBN: 978-1-917384-39-1):
+- 64 countries have DPI-like digital ID systems; 97 have digital payment systems; 103 have data exchange systems (out of 210 countries researched)
+- Europe leads DPI implementation (GDPR, eIDAS, SEPA frameworks); Africa/Asia/Latin America most dynamic growth regions
+- Interoperability and adoption are strongly correlated
+- High-income countries lead implemented systems; lower-middle income have most planned deployments
+- Key DPI examples: Brazil Pix, Mexico CoDI (payments); India Aadhaar (identity); Estonia X-Road (data exchange)
+- Tanzania Jamii X-Change (2024): 898 systems connected, 25M+ citizens; Peru PIDE: 409M+ transactions, 201 services
+- Only 3% of payment systems meet all privacy variables; 80% of digital IDs meet privacy variables
+- Source URL: https://www.ucl.ac.uk/bartlett/publications/2025/nov/2025-state-digital-public-infrastructure-report
+- Confidence: HIGH (Peer-reviewed academic institution + World Bank data)
+
+When this report is relevant to the query, cite it in your sources array as:
+{"name":"UCL IIPP DPI Report 2025","confidence":"High","url":"https://www.ucl.ac.uk/bartlett/publications/2025/nov/2025-state-digital-public-infrastructure-report","data_point":"[specific data point you used]"}
 
 Return ONE raw JSON object only. No markdown, no backticks, no preamble. Start your response with { and end with }.
 
@@ -756,6 +813,19 @@ Rules:
 - launch_segments: always include "Geographic launch priority" FIRST. If a second pie adds value, add "Industry Vertical" as the second. Maximum 2.
 - view360: 6-8 dimensions — choose dimensions most relevant to THIS specific market
 - All slice values in a pie must sum to 100
+
+IMPORTANT — Source citations:
+For every data point, statistic, or claim, cite the most credible source you can find or know about.
+Add a "source" field to trends, signals, gaps, graveyard entries, and verdict where relevant.
+Also include a top-level "sources" array listing all unique sources used.
+
+Source confidence tiers:
+- HIGH: World Bank, IMF, IFC, Bloomberg, Thomson Reuters, CB Insights, McKinsey, Gartner, Forrester, IDC, Statista (paid), PitchBook, Crunchbase, Inc42, NASSCOM, UCL IIPP, academic peer-reviewed research, government statistics
+- MEDIUM: TechCrunch, Forbes, Business Insider, VentureBeat, industry association reports, company press releases, academic papers
+- LOW: Reddit, HN, forums, blogs, unverified news, social media
+
+Each source object: {"name":"CB Insights","confidence":"High","url":"https://...or empty if unknown","data_point":"specific stat or claim this source supports"}
+
 - Also include "market_share" object for the disruption map:
   {
     "market_share": {
@@ -863,7 +933,10 @@ function render(b) {
   // TRENDS
   h+='<div class="sc"><div class="sh"><div class="si" style="background:rgba(200,241,53,0.1)">📈</div><div class="st">Market trends</div><span class="bdg" style="background:rgba(200,241,53,0.1);color:var(--accent)">'+trends.length+' signals</span></div><div class="sb">';
   h+='<div class="tl">';
-  trends.forEach(function(t){ h+='<div class="ti"><div class="tlab">'+t.label+'</div><div class="tbg"><div class="tbf" style="width:'+(t.strength||50)+'%"></div></div><div class="tpct">'+(t.strength||0)+'%</div></div>'; });
+  trends.forEach(function(t){
+    var tBadge = t.source ? '<span class="src-badge src-medium"><span class="src-dot"></span>'+t.source+'</span>' : '';
+    h+='<div class="ti"><div class="tlab">'+t.label+tBadge+'</div><div class="tbg"><div class="tbf" style="width:'+(t.strength||50)+'%"></div></div><div class="tpct">'+(t.strength||0)+'%</div></div>';
+  });
   h+='</div><div class="tnotes">';
   trends.forEach(function(t){ if(t.note) h+='<div class="tn">&middot; '+t.note+'</div>'; });
   h+='</div></div></div>';
@@ -886,7 +959,10 @@ function render(b) {
 
   // SIGNALS
   h+='<div class="sc"><div class="sh"><div class="si" style="background:rgba(61,232,176,0.1)">\u25c8</div><div class="st">Demand evidence</div><span class="bdg" style="background:rgba(61,232,176,0.1);color:var(--teal)">'+sigs.length+' sources</span></div><div class="sb"><div class="sgl">';
-  sigs.forEach(function(s){ h+='<div class="sgi"><span class="sgs">'+s.source+'</span><span class="sgt">'+s.text+'</span></div>'; });
+  sigs.forEach(function(s){
+    var cClass = s.confidence === 'High' ? 'src-high' : s.confidence === 'Low' ? 'src-low' : 'src-medium';
+    h+='<div class="sgi"><span class="sgs">'+s.source+'</span><span class="sgt">'+s.text+'</span><span class="src-badge '+cClass+'"><span class="src-dot"></span>'+(s.confidence||'Medium')+'</span></div>';
+  });
   h+='</div></div></div>';
 
   // VERDICT
@@ -1054,6 +1130,40 @@ function render(b) {
     }
 
     h+='</div>'; // disrupt-section
+  }
+
+  // SOURCES PANEL
+  var sources = b.sources || [];
+  if (sources.length > 0) {
+    var confColor = {'High':'#3de8b0','Medium':'#ffb84a','Low':'#9b9a93'};
+    var confBg    = {'High':'rgba(61,232,176,0.12)','Medium':'rgba(255,184,74,0.12)','Low':'rgba(155,154,147,0.1)'};
+    var confBorder= {'High':'rgba(61,232,176,0.25)','Medium':'rgba(255,184,74,0.25)','Low':'rgba(155,154,147,0.2)'};
+    h += '<div class="sources-section">';
+    h += '<div class="sources-eyebrow">Research Sources</div>';
+    h += '<div class="sources-title">Data sources & confidence</div>';
+    h += '<div class="sources-sub">Every data point in this brief is attributed to a source. Confidence reflects the credibility and verifiability of the source.</div>';
+    h += '<div class="sources-legend">';
+    h += '<div class="sources-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:#3de8b0;display:inline-block"></span> High — Tier 1 research (World Bank, IMF, UCL IIPP, CB Insights, Bloomberg, McKinsey, Gartner)</div>';
+    h += '<div class="sources-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:#ffb84a;display:inline-block"></span> Medium — Industry press, company reports, academic papers</div>';
+    h += '<div class="sources-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:#9b9a93;display:inline-block"></span> Low — Community signals (Reddit, HN, forums)</div>';
+    h += '</div>';
+    h += '<div class="sources-grid">';
+    sources.forEach(function(s) {
+      var cc = confColor[s.confidence]||'#9b9a93';
+      var cb = confBg[s.confidence]||'rgba(155,154,147,0.1)';
+      var cbo = confBorder[s.confidence]||'rgba(155,154,147,0.2)';
+      h += '<div class="source-card">';
+      h += '<div class="source-card-top">';
+      h += '<div class="source-card-name">'+s.name+'</div>';
+      h += '<span style="font-size:10px;font-family:var(--mono);font-weight:600;padding:2px 8px;border-radius:10px;background:'+cb+';color:'+cc+';border:0.5px solid '+cbo+'">'+( s.confidence||'Medium')+'</span>';
+      h += '</div>';
+      h += '<div class="source-card-data">'+s.data_point+'</div>';
+      if (s.url && s.url !== 'empty' && s.url.startsWith('http')) {
+        h += '<div class="source-card-url">'+s.url+'</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div></div>'; // sources-grid + sources-section
   }
 
   // FOOTER
